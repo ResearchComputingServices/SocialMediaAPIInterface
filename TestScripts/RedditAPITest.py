@@ -1,0 +1,1 @@
+# This Python script is used to test Reddit API commands

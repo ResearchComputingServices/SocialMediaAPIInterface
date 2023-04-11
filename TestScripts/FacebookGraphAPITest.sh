@@ -1,0 +1,1 @@
+# This bash script is used to test the 'curl' calls required to access data through the facebook API
