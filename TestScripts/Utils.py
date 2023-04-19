@@ -8,7 +8,6 @@ from colorama import Fore, Back, Style
 BASE_DIR = '/home/nickshiell/Documents/Work/SocialMediaAPIInterface/SocialMediaAPIInterface'
 CREDENTIALS_DIR = os.path.join(BASE_DIR, 'Creds')
 
-
 API_BASE = 'https://oauth.reddit.com/'
 
 POST_KEYS_OF_INTEREST = [   'subreddit',
@@ -44,6 +43,11 @@ COMMENT_KEYS_OF_INTEREST = [    'subreddit_id',
                                 'depth', 	
                                 'ups'] 	
 
+REQUEST_GET_TIMEOUT = 5
+
+MAX_NUM_RESPONSES_TOTAL = 1000
+
+MAX_NUM_RESPONSES_PER_REQUEST = 100
 
 ####################################################################################################
 # UTILITY FUNCTIONS
@@ -75,6 +79,8 @@ def GenerateCredentialsDict(filename):
 # This function checks a response for an error. If there is an error than the error code and any
 # error text is displayed. If HALT is True than the script waits for the user to hit enter
 def Check4ResponseError(resp, HALT = True):
+    retFlag = False
+    
     if 'error' in resp.json().keys():  
         print('Error Code:', resp.json()['error'])
 
@@ -84,6 +90,9 @@ def Check4ResponseError(resp, HALT = True):
         if HALT:    
             input('Press ENTER to continue...')
 
+        retFlag = True
+
+    return retFlag
 ####################################################################################################
 # This function removed the 'type' code at the front of a reddit ID36
 def ExtractID36(str):
@@ -106,6 +115,9 @@ def DisplayDict(dict, keysOfInterest = None):
         if keysOfInterest != None and key not in keysOfInterest:
             continue        
             
-        value = dict[key]
+        value = str(dict[key])
+
+        if len(value) > 100:
+            value = value[:100]
        
         print(Fore.RED + key, Fore.WHITE+':',value)

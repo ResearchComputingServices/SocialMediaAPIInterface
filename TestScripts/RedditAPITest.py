@@ -2,6 +2,17 @@ import requests
 from Utils import *
 
 ####################################################################################################
+# Objects which are passed back as children in the response to a GET request contain objects.
+# Each object has a unique name made up of a TYPE and an ID36 id. The TYPE is one of the following:
+#
+#   t1_	    Comment
+#   t2_	    Account
+#   t3_	    Link
+#   t4_	    Message
+#   t5_	    Subreddit
+#   t6_	    Award
+
+####################################################################################################
 # This function returns a header with authorization TOKEN 
 ####################################################################################################
 def GetAuthentifiedHeader(  credDict,
@@ -34,62 +45,48 @@ def GetAuthentifiedHeader(  credDict,
 ####################################################################################################
 # This function returns the top <N> posts in the subreddit <SR>
 ####################################################################################################
-def GetTopPosts(   headers, 
+def GetTopPosts(    headers, 
                     subRedditName, 
-                    numberOfPosts = 25):
+                    params = {}, 
+                    numResponses = MAX_NUM_RESPONSES_TOTAL):
 
     urlString = API_BASE + 'r/'+subRedditName+'/top'
 
-    print('API Call: ', urlString)
-
-    resp = requests.get(    urlString,
-                            headers=headers,
-                            params={'limit':str(numberOfPosts)})
-    
-    return resp
+    return RequestGet(urlString=urlString,
+                      header=headers,
+                      params=params,
+                      numResultsRequested=numResponses)
 
 ####################################################################################################
 # This function returns the comments for a given post
 #################################################################################################### 
 def GetCommentsFromPost(    headers, 
                             subRedditName, 
-                            postID):
+                            postID,
+                            params = {}, 
+                            numResponses = MAX_NUM_RESPONSES_TOTAL):
 
     urlString = API_BASE + 'r/'+subRedditName+'/comments/'+postID
 
-    print('API Call: ', urlString)
-
-    resp = requests.get(    urlString,
-                            headers=headers)
-    
-    return resp
+    return RequestGet(urlString=urlString,
+                      header=headers,
+                      params=params,
+                      numResultsRequested=numResponses)
 
 ####################################################################################################
 # This function returns all comments/replies from a given user
 ####################################################################################################
-def GetUserComments(headers, userName):
+def GetUserComments(headers, 
+                    userName, 
+                    params = {}, 
+                    numResponses = MAX_NUM_RESPONSES_TOTAL):
+   
     urlString = API_BASE + 'user/'+userName+'/comments'
     
-    print('API Call: ', urlString)
-
-    resp = requests.get(    urlString,
-                            headers=headers)
-    
-    return resp
-
-####################################################################################################
-# This function does a keyword search of a subreddit
-####################################################################################################
-def GetSubredditKeywordSearch(headers, subreddit, keyword):
-    urlString = API_BASE + 'r/'+subreddit + '/search/'
-    
-    print('API Call: ', urlString)
-
-    resp = requests.get(    urlString,
-                            headers=headers,
-                            params={'q':keyword, 'restrict_sr': True, 'limit' : 1000, })
-    
-    return resp
+    return RequestGet(urlString=urlString,
+                      header=headers,
+                      params=params,
+                      numResultsRequested=numResponses)
 
 ####################################################################################################
 # This function returns replies to a comment 
@@ -108,7 +105,55 @@ def ExtractRepliesFromComment(comment):
 
 
     return replies
- 
+
+####################################################################################################
+# This function does a keyword search of a subreddit
+####################################################################################################
+def GetSubredditKeywordSearch(headers, subreddit, keyword, numResponses):
+    urlString = API_BASE + 'r/'+subreddit + '/search/'
+    
+    params={'q':keyword, 'restrict_sr': True}
+    
+    return RequestGet(urlString=urlString,
+                      header=headers,
+                      params=params,
+                      numResultsRequested=numResponses)
+
+####################################################################################################
+# This function performs a GET call from requests as defined by it's arguments
+####################################################################################################
+def RequestGet(urlString, header, params, numResultsRequested = 100):
+        
+    responseList = []
+    
+    print('API Call: ', urlString)
+    
+    if numResultsRequested > MAX_NUM_RESPONSES_TOTAL:
+        numResultsRequested = MAX_NUM_RESPONSES_TOTAL
+    
+    # calculate floor division
+    performNumRequests = numResultsRequested // MAX_NUM_RESPONSES_PER_REQUEST + 1
+    
+    afterID = ''   
+    numResponsesRemaining = numResultsRequested
+    for i in range(0, performNumRequests):
+        
+        params['after'] = afterID        
+        params['limit'] = numResponsesRemaining
+        numResponsesRemaining = numResponsesRemaining - MAX_NUM_RESPONSES_PER_REQUEST
+        
+        resp = requests.get(url=urlString,
+                            headers = header,
+                            params = params,
+                            timeout=REQUEST_GET_TIMEOUT)
+        
+        if not Check4ResponseError(resp):
+            if len(resp.json()['data']['children']) > 0:
+                responseList.append(resp)
+                afterID = resp.json()['data']['children'][-1]['data']['name']
+        
+    return responseList
+
 ####################################################################################################
 # Main Script
 # This Python script is used to test Reddit API commands
@@ -120,24 +165,16 @@ credDict = GenerateCredentialsDict('nicksCreds.dat')
 
 header = GetAuthentifiedHeader(credDict)
 
-# topPostsResponse = GetTopPosts(header, subreddit, 25)
+topPostsResponseList = GetTopPosts(headers=header,
+                                   subRedditName=subreddit,
+                                   numResponses=25)
 
-# Check4ResponseError(topPostsResponse)
-
-# for aPost in topPostsResponse.json()['data']['children']:
-   
-#     authorID = ExtractID36(aPost['data']['author_fullname'])
-#     postID = ExtractID36(aPost['data']['name'])    
-
-#     ups = aPost['data']['ups']
-#     downs = aPost['data']['downs']
-
-    # print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ POST DATA ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-    # print('authorID: ', authorID)
-    # print('postID: ', postID)
-    # print('up votes: ', ups)
-    # print('down votes: ', downs)
-    # DisplayDict(aPost['data'], POST_KEYS_OF_INTEREST)
+for topPostsResponse in topPostsResponseList:
+    for aPost in topPostsResponse.json()['data']['children']:
+    
+        print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ POST DATA ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+        DisplayDict(aPost['data'], POST_KEYS_OF_INTEREST)
+        input()
 
     # Look at the comments for each post    
     # comments = GetCommentsFromPost(header, subreddit, postID)
@@ -158,13 +195,18 @@ header = GetAuthentifiedHeader(credDict)
     #     DisplayDict(comment['data'])
     #     input()
 
-keywordSearch = GetSubredditKeywordSearch(header, 'python', 'learn')
-Check4ResponseError(keywordSearch)
+    
+# keywordSearchResponseList = GetSubredditKeywordSearch(header, 'python', 'python', 500)
 
-print(len( keywordSearch.json()['data']['children']))
-input()
+# counter = 0
 
-for result in keywordSearch.json()['data']['children']:
-    print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ KEYWORD DATA ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-    DisplayDict(result['data'])
-    input()
+# for keywordSearch in keywordSearchResponseList:
+
+#     for result in keywordSearch.json()['data']['children']:
+#         print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ KEYWORD DATA ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+#         counter += 1
+#         print(counter)
+#         DisplayDict(result['data'],POST_KEYS_OF_INTEREST)
+#         afterID = result['data']['name']
+
+#     input()
