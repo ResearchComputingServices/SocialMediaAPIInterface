@@ -78,7 +78,7 @@ def GenerateCredentialsDict(filename):
 ####################################################################################################
 # This function checks a response for an error. If there is an error than the error code and any
 # error text is displayed. If HALT is True than the script waits for the user to hit enter
-def Check4ResponseError(resp, HALT = True):
+def Check4ResponseError(resp, HALT = False):
     retFlag = False
     
     if 'error' in resp.json().keys():  
