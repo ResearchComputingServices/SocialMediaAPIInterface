@@ -1,5 +1,6 @@
 import requests
 from Utils import *
+import sys
 
 ####################################################################################################
 # Objects which are passed back as children in the response to a GET request contain objects.
@@ -43,14 +44,19 @@ def GetAuthentifiedHeader(  credDict,
     return headers
 
 ####################################################################################################
-# This function returns the top <N> posts in the subreddit <SR>
+# This function returns the top (numResponses) posts in the subreddit (subRedditName)
 ####################################################################################################
-def GetSubredditTopPosts(    headers, 
-                    subRedditName, 
-                    params = {}, 
-                    numResponses = MAX_NUM_RESPONSES_TOTAL):
+def GetSubredditPosts(  headers, 
+                        subRedditName = 'all',
+                        category = 'hot',
+                        timeFrame = '', 
+                        numResponses = MAX_NUM_RESPONSES_TOTAL):
 
-    urlString = API_BASE + 'r/'+subRedditName+'/top'
+   
+    urlString = API_BASE + 'r/'+subRedditName+'/'+category
+    
+    params = {}
+    params['t'] = timeFrame
 
     return RequestGet(urlString=urlString,
                       header=headers,
@@ -60,10 +66,18 @@ def GetSubredditTopPosts(    headers,
 ####################################################################################################
 # This function does a keyword search of a subreddit
 ####################################################################################################
-def GetSubredditKeywordSearch(headers, subreddit, keyword, numResponses):
+def GetSubredditKeywordSearch(headers, 
+                              subreddit, 
+                              keyword, 
+                              sortType,
+                              numResponses):
+    
     urlString = API_BASE + 'r/'+subreddit + '/search/'
     
-    params={'q':keyword, 'restrict_sr': True}
+    params = {}
+    params['q'] = keyword
+    params['restrict_sr'] = True
+    params['sort'] = sortType
     
     return RequestGet(urlString=urlString,
                       header=headers,
@@ -74,12 +88,15 @@ def GetSubredditKeywordSearch(headers, subreddit, keyword, numResponses):
 # This function returns the comments for a given post
 #################################################################################################### 
 def GetCommentsFromPost(    headers, 
-                            subRedditName, 
+                            subReddit, 
                             postID,
-                            params = {}, 
+                            sortType,
                             numResponses = MAX_NUM_RESPONSES_TOTAL):
 
-    urlString = API_BASE + 'r/'+subRedditName+'/comments/'+postID
+    urlString = API_BASE + 'r/'+subReddit+'/comments/'+postID
+
+    params = {}
+    params['sort'] = sortType
 
     return RequestGet(urlString=urlString,
                       header=headers,
@@ -91,10 +108,15 @@ def GetCommentsFromPost(    headers,
 ####################################################################################################
 def GetUserComments(headers, 
                     userName, 
-                    params = {}, 
+                    sortType,
+                    timeFrame,
                     numResponses = MAX_NUM_RESPONSES_TOTAL):
    
     urlString = API_BASE + 'user/'+userName+'/comments'
+    
+    params = {}
+    params['sort'] = sortType
+    params['t'] = timeFrame
     
     return RequestGet(urlString=urlString,
                       header=headers,
@@ -116,23 +138,7 @@ def GetUserPosts(   headers,
                       params=params,
                       numResultsRequested=numResponses)
 
-####################################################################################################
-# This function returns replies to a comment 
-####################################################################################################
-def ExtractRepliesFromComment(comment):
-        
-    replies = {}
-    
-    if 'replies' in comment.keys():
-        replies = comment['replies']
-                
-        for reply in replies['data']['children']:
-            print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ REPLY DATA ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-            DisplayDict(reply['data'], COMMENT_KEYS_OF_INTEREST)
-            input()
 
-
-    return replies
 
 ####################################################################################################
 # This function performs a GET call from requests as defined by it's arguments
@@ -169,3 +175,33 @@ def RequestGet(urlString, header, params, numResultsRequested = 100):
         #         afterID = resp.json()['data']['children'][-1]['data']['name']
         
     return responseList
+
+####################################################################################################
+# This block of code is the command line interface for working with the functions in this library
+####################################################################################################
+
+def HandleCommandLineArgs(cmdLineArgs):
+    
+    optionsDict = {}
+    
+    numCmdLineArgs = len(cmdLineArgs)
+    
+    for i in range(0,numCmdLineArgs):
+        option = cmdLineArgs[i]
+        
+        if option == '--subreddit':
+            i = i + 1
+            optionsDict['subReddit'] = cmdLineArgs[i]
+        
+        elif option == '--user':
+            i = i + 1
+            optionsDict['user'] = cmdLineArgs[i]    
+        
+    return optionsDict   
+
+if __name__ == '__main__':
+    print('COMMAD LINE INTERFACE')
+    optionsDict = HandleCommandLineArgs(sys.argv)
+    
+    for option in optionsDict.keys():
+        print(option,':',optionsDict[option])

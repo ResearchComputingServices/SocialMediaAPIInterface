@@ -5,7 +5,7 @@ from colorama import Fore, Back, Style
 # GLOBAL CONSTANTS
 ####################################################################################################
 
-BASE_DIR = '/home/nickshiell/Documents/Work/SocialMediaAPIInterface/SocialMediaAPIInterface'
+BASE_DIR = '/home/nickshiell/Documents/Work/SocialMediaAPIInterface/SocialMediaAPIInterface/Tools/RedditAPI'
 CREDENTIALS_DIR = os.path.join(BASE_DIR, 'Creds')
 
 API_BASE = 'https://oauth.reddit.com/'
@@ -49,6 +49,42 @@ MAX_NUM_RESPONSES_TOTAL = 1000
 
 MAX_NUM_RESPONSES_PER_REQUEST = 100
 
+CATEGORY_TOP = 'top'
+CATEGORY_NEW = 'new'
+CATEGORY_HOT = 'hot'
+CATEGORY_RISING = 'rising'
+
+REDDIT_CATEGORIES = [CATEGORY_TOP,
+                     CATEGORY_NEW,
+                     CATEGORY_HOT,
+                     CATEGORY_RISING]
+
+TIME_FRAME_NOW = 'now'
+TIME_FRAME_TODAY = 'today'
+TIME_FRAME_WEEK = 'week'
+TIME_FRAME_MONTH = 'month'
+TIME_FRAME_YEAR = 'year'
+TIME_FRAME_ALL = 'all'
+
+REDDIT_TIME_FRAMES = [TIME_FRAME_NOW,
+                      TIME_FRAME_TODAY,
+                      TIME_FRAME_WEEK,
+                      TIME_FRAME_MONTH,
+                      TIME_FRAME_YEAR,
+                      TIME_FRAME_ALL]
+
+SORT_BY_RELAVANCE = 'relevance'
+SORT_BY_HOT = 'hot'
+SORT_BY_TOP = 'top'
+SORT_BY_NEW = 'new'
+SORT_BY_MOST_COMMENTS = 'comments'
+
+REDDIT_SORT_BY = [SORT_BY_RELAVANCE,
+                  SORT_BY_HOT,
+                  SORT_BY_TOP,
+                  SORT_BY_NEW,
+                  SORT_BY_MOST_COMMENTS]
+                  
 ####################################################################################################
 # UTILITY FUNCTIONS
 ####################################################################################################
@@ -121,3 +157,21 @@ def DisplayDict(dict, keysOfInterest = None):
             value = value[:100]
        
         print(Fore.RED + key, Fore.WHITE+':',value)
+        
+####################################################################################################
+# This function returns replies to a comment 
+####################################################################################################
+def ExtractRepliesFromComment(comment):
+        
+    replies = {}
+    
+    if 'replies' in comment.keys():
+        replies = comment['replies']
+                
+        for reply in replies['data']['children']:
+            print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ REPLY DATA ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+            DisplayDict(reply['data'], COMMENT_KEYS_OF_INTEREST)
+            input()
+
+
+    return replies
