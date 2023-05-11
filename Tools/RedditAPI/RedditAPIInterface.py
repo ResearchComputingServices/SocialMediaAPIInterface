@@ -4,7 +4,6 @@ import argparse
 import requests
 
 from Utils import *
-
 ####################################################################################################
 # Objects which are passed back as children in the response to a GET request contain objects.
 # Each object has a unique name made up of a TYPE and an ID36 id. The TYPE is one of the following:
@@ -16,187 +15,276 @@ from Utils import *
 #   t5_	    Subreddit
 #   t6_	    Award
 
-####################################################################################################
-# This function returns a header with authorization TOKEN 
-####################################################################################################
-def GetAuthentifiedHeader(  credDict,
-                            headerKey = 'User-Agent',
-                            headerValue = 'MyAPI/0.0.1'):
-    # note that CLIENT_ID refers to 'personal use script' and SECRET_TOKEN to 'token'
-    auth = requests.auth.HTTPBasicAuth( credDict['CLIENT_ID'],
-                                        credDict['SECRET_TOKEN'])
+##############################################################################################################
+# CLASS DEFINITION
+##############################################################################################################
+
+class RedditInterface:
+
+    #########################################################################
+    # MEMBER(S)
+    #########################################################################
+    
+    credientalsDict_ = {'grant_type': 'password',
+                        'CLIENT_ID' : '',
+                        'SECRET_TOKEN' : '',
+                        'username' : '',
+                        'password' : ''}
+
+    header_ = {}
+    
+    params_ = {}
+    
+    listOfResponses_ = []
+    
+    #########################################################################
+    # CONSTRUCTOR(S)
+    #########################################################################
+    
+    def __init__(   self,
+                    CLIENT_ID = '',
+                    SECRET_TOKEN = '',
+                    username = '',
+                    password = ''):
+        
+        self.credientalsDict_['CLIENT_ID'] = CLIENT_ID
+        self.credientalsDict_['SECRET_TOKEN'] = SECRET_TOKEN
+        self.credientalsDict_['username'] = username
+        self.credientalsDict_['password'] = password
+        
+        self.generateAuthentifiedHeader()
+        
+    #########################################################################
+    # PRIVATE FUNCTIONS
+    #########################################################################
+
+    def generateAuthentifiedHeader( self,
+                                    headerKey = 'User-Agent',
+                                    headerValue = 'MyAPI/0.0.1'):
+        
+        # note that CLIENT_ID refers to 'personal use script' and SECRET_TOKEN to 'token'
+        auth = requests.auth.HTTPBasicAuth( self.credientalsDict_['CLIENT_ID'],
+                                            self.credientalsDict_['SECRET_TOKEN'])
+        
+        # setup our header info, which gives reddit a brief description of our app
+        self.header_[headerKey] =  headerValue
+
+        # send our request for an OAuth token
+        resp = requests.post(   'https://www.reddit.com/api/v1/access_token', # TODO: Make this a CONST somewhere
+                                auth=auth, 
+                                data=self.credientalsDict_, 
+                                headers=self.header_)
+        
+        # Check if there was an error message returned
+        self.check4ResponseError(resp.json(), True)
+        
+        # convert response to JSON and get access_token value
+        TOKEN = resp.json()['access_token']
+
+        # add authorization to our headers dictionary
+        self.header_['Authorization'] = f"bearer {TOKEN}"
+
+    ####################################################################################################
+    # This function returns the comments for a given post
+    #################################################################################################### 
+    def getCommentsFromPost(self,
+                            jobDict):
+
+        urlString = API_BASE + 'r/'+jobDict['post'][0]+'/comments/'+jobDict['post'][1]
+                    
+        return self.requestGet(urlString=urlString,
+                               numResultsRequested = jobDict['N'])
+
+    ####################################################################################################
+    # This function returns all comments/replies from a given user
+    ####################################################################################################
+    def getUserComments(self,
+                        jobDict):
+    
+        # Construct the urlSring for the GET request
+        urlString = API_BASE + 'user/'+jobDict['user']+'/comments'
+        
+        # Submit Request  
+        return self.requestGet( urlString=urlString,
+                                numResultsRequested = jobDict['N'])
+
+    ####################################################################################################
+    # This function returns all comments/replies from a given user
+    ####################################################################################################
+    def getUserPosts(   self, 
+                        jobDict):
+        # Construct the urlSring for the GET request
+        urlString = API_BASE + 'user/' + jobDict['user'] + '/submitted' 
+        
+        # Submit Request        
+        return self.requestGet(urlString=urlString,
+                               numResultsRequested = jobDict['N'])
+    
+    ####################################################################################################
+    # This function returns the top (numResponses) posts in the subreddit (subRedditName)
+    ####################################################################################################
+    def getSubredditPosts(  self,
+                            jobDict):
+
+        # Construct the urlSring for the GET request
+        urlString = API_BASE + 'r/'+jobDict['subreddit']+'/'+jobDict['sortBy']
+        
+        # Submit Request
+        return self.requestGet(urlString=urlString,
+                               numResultsRequested = jobDict['N'])
+
+    ####################################################################################################
+    # This function does a keyword search of a subreddit
+    ####################################################################################################
+    def getSubredditKeywordSearch(  self, 
+                                    jobDict):
+        
+        # Construct the urlSring for the GET request
+        urlString = API_BASE + 'r/'+jobDict['subreddit'] + '/search/'
+        
+        # Construct the params for the GET request
+        self.params_['q'] = jobDict['keyword']
+        self.params_['restrict_sr'] = True
+                
+        # Submit Request
+        return self.requestGet( urlString= urlString,
+                                numResultsRequested = jobDict['N'])
+    
+    ####################################################################################################
+    # This functio
+    ####################################################################################################
+    def exctractParams(self,
+                       jobDict):
+
+        self.params_['sortBy'] = jobDict['sortBy']
+        self.params_['limit'] = jobDict['N']
+        self.params_['t'] = jobDict['timeFrame']
        
-    # setup our header info, which gives reddit a brief description of our app
-    headers = {headerKey: headerValue}
 
-    # send our request for an OAuth token
-    resp = requests.post('https://www.reddit.com/api/v1/access_token',
-                        auth=auth, 
-                        data=credDict, 
-                        headers=headers)
-    
-    # Check if there was an error message returned
-    Check4ResponseError(resp, True)
-
-    # convert response to JSON and pull access_token value
-    TOKEN = resp.json()['access_token']
-
-    # add authorization to our headers dictionary
-    headers['Authorization'] = f"bearer {TOKEN}"
-
-    return headers
-
-####################################################################################################
-# This function returns the top (numResponses) posts in the subreddit (subRedditName)
-####################################################################################################
-def GetSubredditPosts(  headers, 
-                        subredditID = 'all',
-                        sortBy = 'hot',
-                        timeFrame = '', 
-                        numResponses = MAX_NUM_RESPONSES_TOTAL):
-
-   
-    urlString = API_BASE + 'r/'+subredditID+'/'+category
-    
-    params = {}
-    params['t'] = timeFrame
-
-    return RequestGet(urlString=urlString,
-                      header=headers,
-                      params=params,
-                      numResultsRequested=numResponses)
-
-####################################################################################################
-# This function does a keyword search of a subreddit
-####################################################################################################
-def GetSubredditKeywordSearch(  headers, 
-                                subredditID, 
-                                keyword, 
-                                sortBy,
-                                timeFrame,
-                                numResponses):
-    
-    urlString = API_BASE + 'r/'+subredditID + '/search/'
-    
-    params = {}
-    params['q'] = keyword
-    params['restrict_sr'] = True
-    params['sort'] = sortBy
-    params['timeFrame'] = timeFrame
-    
-    return RequestGet(urlString=urlString,
-                      header=headers,
-                      params=params,
-                      numResultsRequested=numResponses)
-
-####################################################################################################
-# This function returns the comments for a given post
-#################################################################################################### 
-def GetCommentsFromPost(    headers, 
-                            subredditID, 
-                            postID,
-                            sortBy,
-                            numResponses = MAX_NUM_RESPONSES_TOTAL):
-
-    urlString = API_BASE + 'r/'+subredditID+'/comments/'+postID
-
-    params = {}
-    params['sort'] = sortBy
-
-    return RequestGet(urlString=urlString,
-                      header=headers,
-                      params=params,
-                      numResultsRequested=numResponses)
-
-####################################################################################################
-# This function returns all comments/replies from a given user
-####################################################################################################
-def GetUserComments(headers, 
-                    userID, 
-                    sortBy,
-                    timeFrame,
-                    numResponses = MAX_NUM_RESPONSES_TOTAL):
-   
-    urlString = API_BASE + 'user/'+userID+'/comments'
-    
-    params = {}
-    params['sort'] = sortBy
-    params['t'] = timeFrame
-    
-    return RequestGet(urlString=urlString,
-                      header=headers,
-                      params=params,
-                      numResultsRequested=numResponses)
-
-####################################################################################################
-# This function returns all comments/replies from a given user
-####################################################################################################
-def GetUserPosts(   headers, 
-                    userID, 
-                    sortBy,
-                    timeFrame,
-                    numResponses = MAX_NUM_RESPONSES_TOTAL):
-
-    urlString = API_BASE + 'user/' + userID + '/submitted' 
-    
-    params = {}
-    params['sort'] = sortBy
-    params['t'] = timeFrame
-    
-    return RequestGet(urlString=urlString,
-                      header=headers,
-                      params=params,
-                      numResultsRequested=numResponses)
-
-####################################################################################################
-# This function performs a GET call from requests as defined by it's arguments
-####################################################################################################
-def RequestGet(urlString, header, params, numResultsRequested = 100):
+    ####################################################################################################
+    # This function checks a response for an error. If there is an error than the error code and any
+    # error text is displayed. If HALT is True than the script waits for the user to hit enter
+    ####################################################################################################
+    def check4ResponseError(self, resp, HALT = False):
+           
+        retFlag = False
         
-    responseList = []
-    
-    print('API Call: ', urlString)
-    
-    if numResultsRequested > MAX_NUM_RESPONSES_TOTAL:
-        numResultsRequested = MAX_NUM_RESPONSES_TOTAL
-    
-    # calculate floor division
-    performNumRequests = numResultsRequested // MAX_NUM_RESPONSES_PER_REQUEST + 1
-    
-    afterID = ''   
-    numResponsesRemaining = numResultsRequested
-    for i in range(0, performNumRequests):
+        # if 'error' in resp.json().keys():  
+        if 'error' in resp.keys():  
+            print('Error Code:', resp['error'])
+
+            if 'error_description' in resp.keys():
+                print('Error Msg:',resp['error_description'])
+            
+            if HALT:    
+                input('Press ENTER to continue...')
+
+            retFlag = True
+
+        return retFlag
+            
+    ####################################################################################################
+    # This function performs a GET call from requests as defined by it's arguments
+    ####################################################################################################
+    def requestGet(self,
+                   urlString,
+                   numResultsRequested):
+            
+        responseList = []
+            
+        if numResultsRequested > MAX_NUM_RESPONSES_TOTAL:
+            numResultsRequested = MAX_NUM_RESPONSES_TOTAL
         
-        params['after'] = afterID        
-        params['limit'] = numResponsesRemaining
-        numResponsesRemaining = numResponsesRemaining - MAX_NUM_RESPONSES_PER_REQUEST
+        # calculate floor division
+        performNumRequests = numResultsRequested // MAX_NUM_RESPONSES_PER_REQUEST
+        if performNumRequests == 0:
+            performNumRequests = 1
         
-        resp = requests.get(url=urlString,
-                            headers = header,
-                            params = params,
-                            timeout=REQUEST_GET_TIMEOUT)
+        print('JobDict:',jobDict) 
+        print('API Call: ', urlString)
+        print('URL: ',urlString)
+        print('params: ',self.params_)
+        print('results requested:',numResultsRequested)
+              
+         
+        afterID = ''   
+        for i in range(0, performNumRequests):
+            
+            self.params_['after'] = afterID        
+            
+            resp = requests.get(url=urlString,
+                                headers = self.header_,
+                                params = self.params_,
+                                timeout=REQUEST_GET_TIMEOUT)
+ 
+            respDict = resp.json()
+            if isinstance(respDict,list):
+                respDict = resp.json()[0]               
 
-        responseList.append(resp)
-        # if not Check4ResponseError(resp):
-        #     if len(resp.json()['data']['children']) > 0:
-        #         responseList.append(resp)
-        #         afterID = resp.json()['data']['children'][-1]['data']['name']
+            responseList.append(respDict) 
+            if not self.check4ResponseError(respDict):
+                if len(respDict['data']['children']) > 0:
+                    afterID = respDict['data']['children'][-1]['data']['name']
+
         
-    return responseList
 
-####################################################################################################
-# This block of code is the command line interface for working with the functions in this library
-####################################################################################################
-
-# Example run: python RedditAPIInterface.py -cred nicksCreds.dat -subreddit python -keyword IDE
-
-def ExtractCommandLineArgs():
+        print('# Gets made:',performNumRequests) 
+        print('# of response:',len(responseList)) 
     
+        return responseList
+    
+    ####################################################################################################
+    #
+    ####################################################################################################
+    def HandleJobDict(self, jobDict):
+
+        self.exctractParams(jobDict)
+              
+        # All the get functions will return a JSON data structure containing the results
+        listOfResponseJSON = [] 
+  
+        # This block of code calls the API command which is described in the jobDict
+        if len(jobDict['subreddit']) > 0:
+            if jobDict['getPosts']: 
+                listOfResponseJSON = self.getSubredditPosts(jobDict)
+            elif len(jobDict['keyword']) > 0:
+                listOfResponseJSON = self.getSubredditKeywordSearch(  jobDict)
+            else:
+                print('[WARNING]: HandlejobDict: No ACTION specified for subreddit')  
+        elif  len(jobDict['user']) > 0:
+            if 'getPosts' in jobDict.keys():
+                listOfResponseJSON = self.getUserPosts(jobDict)
+            elif 'getComments' in jobDict.keys():
+                listOfResponseJSON = self.getUserComments(jobDict)
+            else:
+                print('[WARNING]: HandlejobDict: No ACTION specified for user')
+        elif  len(jobDict['post']):
+            listOfResponseJSON = self.getCommentsFromPost(jobDict)
+        else:
+            print('[WARNING]: HandlejobDict: No ITEM ID specified.')  
+
+
+        return listOfResponseJSON
+
+##############################################################################################################
+# This code defines the interface including the todo: webInterface, and command line interface 
+##############################################################################################################
+
+# TODO: Change --getPosts and --getComments so they dont require arguments (nrgs = 0?)
+# TODO: Check if --post --getComments returns all comments
+# TODO: add functionality for saving the data to a file
+# TODO: add functionality for printing retrieved data to the screen
+
+# python RedditAPIInterfaceObj.py nicksCreds.dat --subreddit 'python' --getPosts 1
+# python RedditAPIInterfaceObj.py nicksCreds.dat --subreddit 'python' --keyword ide
+# python RedditAPIInterfaceObj.py nicksCreds.dat --user pmz --getComments 1
+# python RedditAPIInterfaceObj.py nicksCreds.dat --user pmz --getPosts 1
+# python RedditAPIInterfaceObj.py nicksCreds.dat --post 13e5oxw --getComments 1
+
+def ExtractCommandLineArgs() :
     parser = argparse.ArgumentParser(   prog='ProgramName',
                                         description='What the program does',
                                         epilog='Text at the bottom of help')
-
-    # Positional Argument. Mandatory 
     parser.add_argument('credFilename', help = 'File containing reddit API creditentials.')
 
     # Optional Argument.
@@ -204,13 +292,13 @@ def ExtractCommandLineArgs():
     # Return options
     parser.add_argument('--sortBy',default='top')
     parser.add_argument('--timeFrame',default='all')
-    parser.add_argument('--limit', type=int,default=MAX_NUM_RESPONSES_TOTAL)
+    parser.add_argument('--N', type=int,default=MAX_NUM_RESPONSES_TOTAL)
 
     # Items
     items = parser.add_mutually_exclusive_group(required=True)
-    items.add_argument('--subreddit',default='python')
+    items.add_argument('--subreddit',default='')
     items.add_argument('--user',default='')
-    items.add_argument('--post',default='')
+    items.add_argument('--post',nargs=2,default=['',''])
 
     # Actions
     actions = parser.add_mutually_exclusive_group(required=True)
@@ -222,100 +310,28 @@ def ExtractCommandLineArgs():
        
     return vars(args)
 
-####################################################################################################
-#
-####################################################################################################
-def HandleOptionsDict(optionsDict):
-     
-    # All the get functions will return a JSON data structure containing the results
-    responseJSON = None 
-    
-    # this code generates the authentication required to use the other API functions
-    credDict = GenerateCredentialsDict(optionsDict['credFilename'])
-    header = GetAuthentifiedHeader(credDict)
-
-    print(credDict)
-    print(header)
-    input()
-
-    # This block of code calls the actually API command set in the optionsDict
-    if len(optionsDict['subreddit']) > 0:
-        
-        ######################################################################################
-        # TODO: Put this into a function
-        if optionsDict['getPosts']: 
-            responseJSON = GetSubredditPosts(   headers=header,
-                                                subredditID=optionsDict['subRedditID'],
-                                                sortBy=optionsDict['sortBy'],
-                                                timeFrame=optionsDict['timeFrame'],
-                                                numResponses=optionsDict['limit'])
-        elif len(optionsDict['keyword']) > 0:
-            responseJSON = GetSubredditKeywordSearch(   headers=header,
-                                                        subredditID=optionsDict['subRedditID'],
-                                                        keyword=optionsDict['keyword'],
-                                                        sortBy=optionsDict['sortBy'],
-                                                        timeFrame=optionsDict['timeFrame'],
-                                                        numResponses=optionsDict['limit'])
-        else:
-            print('[WARNING]: HandleOptionsdict: No ACTION specified for subreddit')  
-        ######################################################################################
-    elif 'userID' in optionsDict.keys():
-        ######################################################################################
-        # TODO: Put this into a function
-        if 'getPosts' in optionsDict.keys():
-            responseJSON = GetUserPosts(headers=header,
-                                        userID=optionsDict['userID'],
-                                        sortBy=optionsDict['sortBy'],
-                                        timeFrame=optionsDict['timeFrame'],
-                                        numResponses=optionsDict['limit'])
-        
-        elif 'getComments' in optionsDict.keys():
-            responseJSON = GetUserComments( headers=header,
-                                            userID=optionsDict['userID'],
-                                            sortBy=optionsDict['sortBy'],
-                                            timeFrame=optionsDict['timeFrame'],
-                                            numResponses=optionsDict['limit'])
-        else:
-            print('[WARNING]: HandleOptionsdict: No ACTION specified for user')
-        ######################################################################################
-    elif 'postID' in optionsDict.keys():
-        ######################################################################################
-        # TODO: Put this into a function
-        responseJSON = GetCommentsFromPost( headers=header,
-                                            subRedditID=optionsDict['subRedditID'],
-                                            postID=optionsDict['postID'],
-                                            sortBy=optionsDict['sortBy'],
-                                            numResponses=optionsDict['limit'])
-        ######################################################################################
-    else:
-        print('[WARNING]: HandleOptionsdict: No ITEM ID specified.')  
-
-    return responseJSON
-
-####################################################################################################
-# This is the command line interface
-####################################################################################################
 if __name__ == '__main__':
     
+    session = RedditInterface()
+    
     # turn the list of command line args into a dictionary
-    optionsDict = ExtractCommandLineArgs()    
+    jobDict = ExtractCommandLineArgs()    
+    
+    # collect all the responses generated by the RedditInterface named session
+    listOfResponsesJSON = session.HandleJobDict(jobDict)   
+        
+    #now do something with thre responses
+    numResponses = 0
+    for responseJSON in listOfResponsesJSON:
+        numResponses += len(responseJSON['data']['children'])
+        for aPost in responseJSON['data']['children']:
+            print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ POST DATA ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+            #DisplayDict(aPost['data'], COMMENT_KEYS_OF_INTEREST)
+            DisplayDict(aPost['data'], POST_KEYS_OF_INTEREST)
+            input()    
+    
+    input(numResponses)
 
+        
     
-    r = HandleOptionsDict(optionsDict)
-
-####################################################################################################
-# This is the function called by the scheduler to handle a job specified by the webApp
-####################################################################################################
-def RedditJobWebAppInterface(optionsDict):
-    
-    # Perform the Get Request speficied by the options dictionary
-    responseJSON = HandleOptionsDict(optionsDict)
-    
-    # This function will be common to all the social media API tools (tasked to Jazmin)
-    # GenerateOutputFile(responseJSON)    
-    
-    # This function will update the DB about the final status of the job, and the location of the results
-    # (common to all tool)
-    # UpdateDataBase()    
-    
-      
+                              
