@@ -86,50 +86,6 @@ REDDIT_SORT_BY = [SORT_BY_RELAVANCE,
                   SORT_BY_MOST_COMMENTS]
                   
 ####################################################################################################
-# UTILITY FUNCTIONS
-####################################################################################################
-
-####################################################################################################
-# This function reads a users credentials from a file and loads them into a dictionary
-# which can be passed to the Reddit server for authenification
-
-def GenerateCredentialsDict(filename):
-    
-    credDict = {'grant_type': 'password'}
-    
-    filePath = os.path.join(CREDENTIALS_DIR, filename)
-    
-    file = open(filePath, 'r')
-    
-    lines = file.readlines()
-            
-    for line in lines:
-        lineSplit = line.split(':')
-        
-        if len(lineSplit) == 2:
-            credDict[lineSplit[0].strip()] = lineSplit[1].strip()
-        
-    return credDict
-
-####################################################################################################
-# This function checks a response for an error. If there is an error than the error code and any
-# error text is displayed. If HALT is True than the script waits for the user to hit enter
-def Check4ResponseError(resp, HALT = False):
-    retFlag = False
-    
-    if 'error' in resp.json().keys():  
-        print('Error Code:', resp.json()['error'])
-
-        if 'error_description' in resp.json().keys():
-            print('Error Msg:',resp.json()['error_description'])
-        
-        if HALT:    
-            input('Press ENTER to continue...')
-
-        retFlag = True
-
-    return retFlag
-####################################################################################################
 # This function removed the 'type' code at the front of a reddit ID36
 def ExtractID36(str):
     
