@@ -87,6 +87,7 @@ REDDIT_SORT_BY = [SORT_BY_RELAVANCE,
                   
 ####################################################################################################
 # This function removed the 'type' code at the front of a reddit ID36
+####################################################################################################
 def ExtractID36(str):
     
     id36 = None
@@ -100,6 +101,7 @@ def ExtractID36(str):
 
 ####################################################################################################
 # This function prints the contents of a dictionary outwith colours
+####################################################################################################
 def DisplayDict(dict, keysOfInterest = None):
     
     for key in dict.keys():

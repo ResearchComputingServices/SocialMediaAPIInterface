@@ -275,17 +275,14 @@ class RedditInterface:
 # TODO: add functionality for saving the data to a file
 # TODO: add functionality for printing retrieved data to the screen
 
-# python RedditAPIInterfaceObj.py nicksCreds.dat --subreddit 'python' --getPosts 1
-# python RedditAPIInterfaceObj.py nicksCreds.dat --subreddit 'python' --keyword ide
-# python RedditAPIInterfaceObj.py nicksCreds.dat --user pmz --getComments 1
-# python RedditAPIInterfaceObj.py nicksCreds.dat --user pmz --getPosts 1
-# python RedditAPIInterfaceObj.py nicksCreds.dat --post 13e5oxw --getComments 1
+# python RedditAPIInterface.py --subreddit 'python' --getPosts 1
+# python RedditAPIInterface.py --subreddit 'python' --keyword ide
+# python RedditAPIInterface.py --user pmz --getComments 1
+# python RedditAPIInterface.py --user pmz --getPosts 1
+# python RedditAPIInterface.py --post 13e5oxw --getComments 1
 
 def ExtractCommandLineArgs() :
-    parser = argparse.ArgumentParser(   prog='ProgramName',
-                                        description='What the program does',
-                                        epilog='Text at the bottom of help')
-    parser.add_argument('credFilename', help = 'File containing reddit API creditentials.')
+    parser = argparse.ArgumentParser()
 
     # Optional Argument.
 
@@ -312,7 +309,10 @@ def ExtractCommandLineArgs() :
 
 if __name__ == '__main__':
     
-    session = RedditInterface()
+    session = RedditInterface('_-W7ANd6UN4EXexvgHn8DA',
+                              'kpBdT1f-nRHM_kxdBzmxoOnDo_96FA',
+                              'nickshiell',
+                              'Q!w2e3r4')
     
     # turn the list of command line args into a dictionary
     jobDict = ExtractCommandLineArgs()    
