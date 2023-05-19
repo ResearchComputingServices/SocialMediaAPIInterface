@@ -309,7 +309,10 @@ def ExtractCommandLineArgs() :
 
 if __name__ == '__main__':
     
-    session = RedditInterface()
+    session = RedditInterface('_-W7ANd6UN4EXexvgHn8DA',
+                              'kpBdT1f-nRHM_kxdBzmxoOnDo_96FA',
+                              'nickshiell',
+                              'Q!w2e3r4')
     
     # turn the list of command line args into a dictionary
     jobDict = ExtractCommandLineArgs()    
