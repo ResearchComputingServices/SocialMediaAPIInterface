@@ -1,10 +1,6 @@
 import concurrent.futures
 import time
-import sys
 import sqlite3
-
-sys.path.insert(0, '/home/nickshiell/Documents/Work/SocialMediaAPIInterface/SocialMediaAPIInterface/')
-
 from Utils import *
 from ToolInterfaces.RedditAPIInterface import RedditInterface
 from ToolInterfaces.CrawlerInterface import CrawlerInterface

@@ -2,4 +2,7 @@ Creds/*
 __pycache__/
 Scheduler/TaskMaker.py
 Scheduler/DataBaseUtils.py
-Scheduler/TestDataBase.py
+Scheduler/MakeTestDataBase.py
+Scheduler/testDataBase.db
+Scheduler/OutputData/
+*.db

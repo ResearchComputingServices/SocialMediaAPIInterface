@@ -1,12 +1,11 @@
 import sqlite3
-import sys
 import logging
+from Utils import *
 
-sys.path.insert(0, '/home/nickshiell/Documents/Work/SocialMediaAPIInterface/SocialMediaAPIInterface/')
+import sys
+sys.path.insert(0, BASE_DIR)
 
 from DataBaseUtils import GetRedditTableRow, GetCredentialsTableRow, SetJobStatus, SetOutputFilePath
-
-from Utils import *
 from Tools.RedditAPI.RedditAPIInterface import RedditSession
 
 ####################################################################################################
