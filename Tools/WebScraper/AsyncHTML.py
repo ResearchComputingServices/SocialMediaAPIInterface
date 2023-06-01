@@ -4,7 +4,6 @@ import concurrent.futures
 import time
 import sys
 
-
 from urllib.parse import urlparse
 from requests_html import AsyncHTMLSession
 
@@ -209,56 +208,6 @@ if __name__ == '__main__':
     else:
             print('[ERROR] Unknown # of command line args: ', len(sys.argv))  
             
-############################################################################################
-# This function will take in a list oh dictionarys which describe a job
-############################################################################################
-def SubmitJobs(listOfJobs):
 
-    # Create a context manager to handle the opening/closing of processes
-    with concurrent.futures.ProcessPoolExecutor() as executor:
-        for job in listOfJobs:           
-            
-            # get the data from the job dictionary    
-            jobType = job['type']
-            optionsDict = job['optionsDict']
-            
-            # start a process that will execute the correct script
-            if jobType == REDDIT_JOB:
-                executor.submit(RedditJobWebAppInterface, optionsDict)
-            elif jobType == YOUTUBE_JOB:
-                executor.submit(YouTubeJobWebAppInterface, optionsDict)
-            elif jobType == TWITTER_JOB:
-                executor.submit(TwitterJobWebAppInterface, optionsDict)
-            else:
-                print('[ERROR]: Unknown Job Type: ', jobType)
-        
-        # this allows the context manager to return before each process is finished
-        executor.shutdown(wait=False)
-        
-############################################################################################
-# This is the main loop for the job scheduler
-############################################################################################
-if __name__ == '__main__':
-    
-    keepRunning = True
-    
-    while keepRunning:
-        
-        # This function will check the database for news and return a list of dictionaries with
-        # the row ID of the new job
-        listOfJobs = CheckDataBaseForNewJobs()
-
-        if len(listOfJobs) > 0:
-            # This funciton will generate a dictionary describing the job (type, options, etc)
-            GenerateNewJobs(listOfJobs)
-            
-            # This function will submit the jobs to be run on seperate processes
-            SubmitJobs(listOfJobs)   
-        else:
-            time.sleep(WAIT_TIME)
-        
-        # check if some type of exit condition has been set
-        keepRunning = CheckExit()
-      
         
         

@@ -1,9 +1,9 @@
-import sys
-
 import argparse
 import requests
+import logging
 
-from Utils import *
+from Tools.RedditAPI.RedditUtils import *
+
 ####################################################################################################
 # Objects which are passed back as children in the response to a GET request contain objects.
 # Each object has a unique name made up of a TYPE and an ID36 id. The TYPE is one of the following:
@@ -16,21 +16,15 @@ from Utils import *
 #   t6_	    Award
 
 ##############################################################################################################
-# CLASS DEFINITION
+# CLASS DEFINITION: RedditInterface 
 ##############################################################################################################
 
-class RedditInterface:
+class RedditSession:
 
     #########################################################################
     # MEMBER(S)
     #########################################################################
     
-    credientalsDict_ = {'grant_type': 'password',
-                        'CLIENT_ID' : '',
-                        'SECRET_TOKEN' : '',
-                        'username' : '',
-                        'password' : ''}
-
     header_ = {}
     
     params_ = {}
@@ -42,16 +36,10 @@ class RedditInterface:
     #########################################################################
     
     def __init__(   self,
-                    CLIENT_ID = '',
-                    SECRET_TOKEN = '',
-                    username = '',
-                    password = ''):
+                    credientalsDict = {}):
         
-        self.credientalsDict_['CLIENT_ID'] = CLIENT_ID
-        self.credientalsDict_['SECRET_TOKEN'] = SECRET_TOKEN
-        self.credientalsDict_['username'] = username
-        self.credientalsDict_['password'] = password
-        
+        self.credientalsDict_ = credientalsDict
+            
         self.generateAuthentifiedHeader()
         
     #########################################################################
@@ -61,7 +49,7 @@ class RedditInterface:
     def generateAuthentifiedHeader( self,
                                     headerKey = 'User-Agent',
                                     headerValue = 'MyAPI/0.0.1'):
-        
+               
         # note that CLIENT_ID refers to 'personal use script' and SECRET_TOKEN to 'token'
         auth = requests.auth.HTTPBasicAuth( self.credientalsDict_['CLIENT_ID'],
                                             self.credientalsDict_['SECRET_TOKEN'])
@@ -93,7 +81,7 @@ class RedditInterface:
         urlString = API_BASE + 'r/'+jobDict['post'][0]+'/comments/'+jobDict['post'][1]
                     
         return self.requestGet(urlString=urlString,
-                               numResultsRequested = jobDict['N'])
+                               numResultsRequested = jobDict['n'])
 
     ####################################################################################################
     # This function returns all comments/replies from a given user
@@ -106,7 +94,7 @@ class RedditInterface:
         
         # Submit Request  
         return self.requestGet( urlString=urlString,
-                                numResultsRequested = jobDict['N'])
+                                numResultsRequested = jobDict['n'])
 
     ####################################################################################################
     # This function returns all comments/replies from a given user
@@ -118,7 +106,7 @@ class RedditInterface:
         
         # Submit Request        
         return self.requestGet(urlString=urlString,
-                               numResultsRequested = jobDict['N'])
+                               numResultsRequested = jobDict['n'])
     
     ####################################################################################################
     # This function returns the top (numResponses) posts in the subreddit (subRedditName)
@@ -128,10 +116,10 @@ class RedditInterface:
 
         # Construct the urlSring for the GET request
         urlString = API_BASE + 'r/'+jobDict['subreddit']+'/'+jobDict['sortBy']
-        
+                
         # Submit Request
         return self.requestGet(urlString=urlString,
-                               numResultsRequested = jobDict['N'])
+                               numResultsRequested = jobDict['n'])
 
     ####################################################################################################
     # This function does a keyword search of a subreddit
@@ -148,20 +136,19 @@ class RedditInterface:
                 
         # Submit Request
         return self.requestGet( urlString= urlString,
-                                numResultsRequested = jobDict['N'])
+                                numResultsRequested = jobDict['n'])
     
     ####################################################################################################
-    # This functio
+    # This function
     ####################################################################################################
     def exctractParams(self,
                        jobDict):
 
         self.params_['sortBy'] = jobDict['sortBy']
-        self.params_['limit'] = jobDict['N']
+        self.params_['limit'] = jobDict['n']
         self.params_['t'] = jobDict['timeFrame']
        
-
-    ####################################################################################################
+  ####################################################################################################
     # This function checks a response for an error. If there is an error than the error code and any
     # error text is displayed. If HALT is True than the script waits for the user to hit enter
     ####################################################################################################
@@ -169,12 +156,11 @@ class RedditInterface:
            
         retFlag = False
         
-        # if 'error' in resp.json().keys():  
         if 'error' in resp.keys():  
-            print('Error Code:', resp['error'])
+            logging.error('Error Code:', resp['error'])
 
             if 'error_description' in resp.keys():
-                print('Error Msg:',resp['error_description'])
+                logging.error('Error Msg:',resp['error_description'])
             
             if HALT:    
                 input('Press ENTER to continue...')
@@ -189,27 +175,20 @@ class RedditInterface:
     def requestGet(self,
                    urlString,
                    numResultsRequested):
-            
+                       
         responseList = []
-            
+
         if numResultsRequested > MAX_NUM_RESPONSES_TOTAL:
             numResultsRequested = MAX_NUM_RESPONSES_TOTAL
-        
+
         # calculate floor division
         performNumRequests = numResultsRequested // MAX_NUM_RESPONSES_PER_REQUEST
         if performNumRequests == 0:
             performNumRequests = 1
-        
-        print('JobDict:',jobDict) 
-        print('API Call: ', urlString)
-        print('URL: ',urlString)
-        print('params: ',self.params_)
-        print('results requested:',numResultsRequested)
-              
-         
+                      
         afterID = ''   
         for i in range(0, performNumRequests):
-            
+
             self.params_['after'] = afterID        
             
             resp = requests.get(url=urlString,
@@ -226,48 +205,55 @@ class RedditInterface:
                 if len(respDict['data']['children']) > 0:
                     afterID = respDict['data']['children'][-1]['data']['name']
 
-        
-
-        print('# Gets made:',performNumRequests) 
-        print('# of response:',len(responseList)) 
-    
         return responseList
     
     ####################################################################################################
     #
-    ####################################################################################################
     def HandleJobDict(self, jobDict):
-
         self.exctractParams(jobDict)
-              
+        
         # All the get functions will return a JSON data structure containing the results
         listOfResponseJSON = [] 
   
         # This block of code calls the API command which is described in the jobDict
-        if len(jobDict['subreddit']) > 0:
-            if jobDict['getPosts']: 
+          
+        if jobDict['subreddit'] != None:
+         
+            if jobDict['getposts'] == 1: 
                 listOfResponseJSON = self.getSubredditPosts(jobDict)
             elif len(jobDict['keyword']) > 0:
                 listOfResponseJSON = self.getSubredditKeywordSearch(  jobDict)
             else:
-                print('[WARNING]: HandlejobDict: No ACTION specified for subreddit')  
-        elif  len(jobDict['user']) > 0:
-            if 'getPosts' in jobDict.keys():
+                logging.warning('[WARNING]: HandlejobDict: No ACTION specified for subreddit',flush=True)  
+       
+        elif  jobDict['user'] != None:
+
+            if jobDict['getposts'] == 1:
                 listOfResponseJSON = self.getUserPosts(jobDict)
-            elif 'getComments' in jobDict.keys():
+            elif jobDict['getcomments'] == 1:
                 listOfResponseJSON = self.getUserComments(jobDict)
             else:
-                print('[WARNING]: HandlejobDict: No ACTION specified for user')
-        elif  len(jobDict['post']):
+                logging.warning('[WARNING]: HandlejobDict: No ACTION specified for user',flush=True)
+       
+        elif  jobDict['post'] != None:
             listOfResponseJSON = self.getCommentsFromPost(jobDict)
+       
         else:
-            print('[WARNING]: HandlejobDict: No ITEM ID specified.')  
-
-
+            logging.warning('[WARNING]: HandlejobDict: No ITEM ID specified.',flush=True)  
+            
         return listOfResponseJSON
+    
+    ####################################################################################################
+    #
+    def End():
+        # TODO: do stuff here to end the session cleanly
+        logging.debug('END SESSION')
+        
+        return 
+        
 
 ##############################################################################################################
-# This code defines the interface including the todo: webInterface, and command line interface 
+# This code defines the command interface including the todo: webInterface, and command line interface 
 ##############################################################################################################
 
 # TODO: Change --getPosts and --getComments so they dont require arguments (nrgs = 0?)
@@ -275,6 +261,7 @@ class RedditInterface:
 # TODO: add functionality for saving the data to a file
 # TODO: add functionality for printing retrieved data to the screen
 
+# Example command line calls:
 # python RedditAPIInterface.py --subreddit 'python' --getPosts 1
 # python RedditAPIInterface.py --subreddit 'python' --keyword ide
 # python RedditAPIInterface.py --user pmz --getComments 1
@@ -307,12 +294,19 @@ def ExtractCommandLineArgs() :
        
     return vars(args)
 
+##############################################################################################################
+# This code tests the above class using the command line interface
+##############################################################################################################
 if __name__ == '__main__':
     
-    session = RedditInterface('_-W7ANd6UN4EXexvgHn8DA',
-                              'kpBdT1f-nRHM_kxdBzmxoOnDo_96FA',
-                              'nickshiell',
-                              'Q!w2e3r4')
+    credientalsDict = {}
+    credientalsDict['grant_type'] = 'password'
+    credientalsDict['CLIENT_ID'] = '_-W7ANd6UN4EXexvgHn8DA'
+    credientalsDict['SECRET_TOKEN'] = 'kpBdT1f-nRHM_kxdBzmxoOnDo_96FA'
+    credientalsDict['username'] = 'nickshiell'
+    credientalsDict['password'] =  'Q!w2e3r4'
+        
+    session = RedditSession(credientalsDict)
     
     # turn the list of command line args into a dictionary
     jobDict = ExtractCommandLineArgs()    
@@ -331,7 +325,4 @@ if __name__ == '__main__':
             input()    
     
     input(numResponses)
-
-        
-    
-                              
+            

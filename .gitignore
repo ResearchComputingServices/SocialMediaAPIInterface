@@ -1,2 +1,5 @@
 Creds/*
 __pycache__/
+Scheduler/TaskMaker.py
+Scheduler/DataBaseUtils.py
+Scheduler/TestDataBase.py
