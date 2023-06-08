@@ -2,7 +2,7 @@ import argparse
 import requests
 import logging
 
-from Tools.RedditAPI.RedditUtils import *
+from RedditUtils import *
 
 ####################################################################################################
 # Objects which are passed back as children in the response to a GET request contain objects.
@@ -19,7 +19,7 @@ from Tools.RedditAPI.RedditUtils import *
 # CLASS DEFINITION: RedditInterface 
 ##############################################################################################################
 
-class RedditSession:
+class RedditAPISession:
 
     #########################################################################
     # MEMBER(S)
@@ -148,7 +148,7 @@ class RedditSession:
         self.params_['limit'] = jobDict['n']
         self.params_['t'] = jobDict['timeFrame']
        
-  ####################################################################################################
+    ####################################################################################################
     # This function checks a response for an error. If there is an error than the error code and any
     # error text is displayed. If HALT is True than the script waits for the user to hit enter
     ####################################################################################################
@@ -208,36 +208,57 @@ class RedditSession:
         return responseList
     
     ####################################################################################################
-    #
+    # This function handles 'subreddit' type jobs
+    def handleSubRedditJob(self, jobDict):
+        listOfResponseJSON = [] 
+        
+        if jobDict['getposts'] == 1: 
+            listOfResponseJSON = self.getSubredditPosts(jobDict)
+        elif len(jobDict['keyword']) > 0:
+            listOfResponseJSON = self.getSubredditKeywordSearch(  jobDict)
+        else:
+            logging.warning('[WARNING]: HandlejobDict: No ACTION specified for subreddit',flush=True)  
+        
+        return listOfResponseJSON    
+    
+    ####################################################################################################
+    # This function handles 'user' type jobs
+    def handleUserJob(self, jobDict):
+        listOfResponseJSON = [] 
+        
+        if jobDict['getposts'] == 1:
+            listOfResponseJSON = self.getUserPosts(jobDict)
+        elif jobDict['getcomments'] == 1:
+            listOfResponseJSON = self.getUserComments(jobDict)
+        else:
+            logging.warning('[WARNING]: HandlejobDict: No ACTION specified for user',flush=True)
+        
+        return listOfResponseJSON    
+    
+    ####################################################################################################
+    # This function handles 'post' type jobs
+    def handlePostJob(self, jobDict):
+        listOfResponseJSON = [] 
+        
+        listOfResponseJSON = self.getCommentsFromPost(jobDict)
+        
+        return listOfResponseJSON 
+        
+    ####################################################################################################
+    # This function performs the API call which is described in the jobDict dictionary.
     def HandleJobDict(self, jobDict):
         self.exctractParams(jobDict)
         
         # All the get functions will return a JSON data structure containing the results
         listOfResponseJSON = [] 
   
-        # This block of code calls the API command which is described in the jobDict
-          
+        # This block of code calls the API command which is described in the jobDict          
         if jobDict['subreddit'] != None:
-         
-            if jobDict['getposts'] == 1: 
-                listOfResponseJSON = self.getSubredditPosts(jobDict)
-            elif len(jobDict['keyword']) > 0:
-                listOfResponseJSON = self.getSubredditKeywordSearch(  jobDict)
-            else:
-                logging.warning('[WARNING]: HandlejobDict: No ACTION specified for subreddit',flush=True)  
-       
-        elif  jobDict['user'] != None:
-
-            if jobDict['getposts'] == 1:
-                listOfResponseJSON = self.getUserPosts(jobDict)
-            elif jobDict['getcomments'] == 1:
-                listOfResponseJSON = self.getUserComments(jobDict)
-            else:
-                logging.warning('[WARNING]: HandlejobDict: No ACTION specified for user',flush=True)
-       
+            self.handleSubRedditJob(jobDict)
+        elif jobDict['user'] != None:
+            self.handleUserJob(jobDict)       
         elif  jobDict['post'] != None:
-            listOfResponseJSON = self.getCommentsFromPost(jobDict)
-       
+            self.handlePostJob(jobDict)
         else:
             logging.warning('[WARNING]: HandlejobDict: No ITEM ID specified.',flush=True)  
             
@@ -262,11 +283,11 @@ class RedditSession:
 # TODO: add functionality for printing retrieved data to the screen
 
 # Example command line calls:
-# python RedditAPIInterface.py --subreddit 'python' --getPosts 1
-# python RedditAPIInterface.py --subreddit 'python' --keyword ide
-# python RedditAPIInterface.py --user pmz --getComments 1
-# python RedditAPIInterface.py --user pmz --getPosts 1
-# python RedditAPIInterface.py --post 13e5oxw --getComments 1
+# python RedditAPISession.py --subreddit 'python' --getposts 1
+# python RedditAPISession.py --subreddit 'python' --keyword ide
+# python RedditAPISession.py --user pmz --getcomments 1
+# python RedditAPISession.py --user pmz --getposts 1
+# python RedditAPISession.py --post 13e5oxw --getcomments 1
 
 def ExtractCommandLineArgs() :
     parser = argparse.ArgumentParser()
@@ -276,7 +297,7 @@ def ExtractCommandLineArgs() :
     # Return options
     parser.add_argument('--sortBy',default='top')
     parser.add_argument('--timeFrame',default='all')
-    parser.add_argument('--N', type=int,default=MAX_NUM_RESPONSES_TOTAL)
+    parser.add_argument('--n', type=int,default=MAX_NUM_RESPONSES_TOTAL)
 
     # Items
     items = parser.add_mutually_exclusive_group(required=True)
@@ -287,8 +308,8 @@ def ExtractCommandLineArgs() :
     # Actions
     actions = parser.add_mutually_exclusive_group(required=True)
     actions.add_argument('--keyword',default='',help='Search the given SUBREDDIT for KEYWORD')
-    actions.add_argument('--getPosts',type=int,default=0,choices=[0,1],help='Return posts from  SUBREDDIT or USER')
-    actions.add_argument('--getComments',type=int,default=0,choices=[0,1],help='Return posts from  POST or USER')
+    actions.add_argument('--getposts',type=int,default=0,choices=[0,1],help='Return posts from  SUBREDDIT or USER')
+    actions.add_argument('--getcomments',type=int,default=0,choices=[0,1],help='Return posts from  POST or USER')
 
     args = parser.parse_args()
        
@@ -300,13 +321,9 @@ def ExtractCommandLineArgs() :
 if __name__ == '__main__':
     
     credientalsDict = {}
-    credientalsDict['grant_type'] = 'password'
-    credientalsDict['CLIENT_ID'] = '_-W7ANd6UN4EXexvgHn8DA'
-    credientalsDict['SECRET_TOKEN'] = 'kpBdT1f-nRHM_kxdBzmxoOnDo_96FA'
-    credientalsDict['username'] = 'nickshiell'
-    credientalsDict['password'] =  'Q!w2e3r4'
+   
         
-    session = RedditSession(credientalsDict)
+    session = RedditAPISession(credientalsDict)
     
     # turn the list of command line args into a dictionary
     jobDict = ExtractCommandLineArgs()    

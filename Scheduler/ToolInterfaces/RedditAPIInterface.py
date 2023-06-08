@@ -6,7 +6,7 @@ import sys
 sys.path.insert(0, BASE_DIR)
 
 from DataBaseUtils import GetRedditTableRow, GetCredentialsTableRow, SetJobStatus, SetOutputFilePath
-from Tools.RedditAPI.RedditAPIInterface import RedditSession
+from Tools.RedditAPITool.RedditAPISession import RedditAPISession
 
 ####################################################################################################
 #
@@ -18,9 +18,9 @@ def PerformRedditAPICall(sqliteCursor,jobDict):
     optionsDict = GetRedditTableRow(sqliteCursor,jobDict['redditJobID'])    
     credentialsDict = GetCredentialsTableRow(sqliteCursor,jobDict['credentialsID'])
     
-    session = RedditSession(credentialsDict) 
+    session = RedditAPISession(credentialsDict) 
     listOfResponsesJSON = session.HandleJobDict(optionsDict) 
-    RedditSession.End()
+    session.End()
             
     return listOfResponsesJSON
 
