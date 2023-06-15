@@ -1,0 +1,9 @@
+google-api-python-client
+python-dateutil
+pandas
+openpyxl
+werkzeug
+xlsxwriter
+emoji
+bs4
+colorama

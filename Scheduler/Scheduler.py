@@ -1,9 +1,9 @@
 import concurrent.futures
 import time
 import sqlite3
-from Utils import *
-from ToolInterfaces.RedditAPIInterface import RedditInterface
-from ToolInterfaces.CrawlerInterface import CrawlerInterface
+from .Utils import  *
+from .ToolInterfaces.RedditAPIInterface import RedditInterface
+from .ToolInterfaces.CrawlerInterface import CrawlerInterface
 
 ##############################################################################################################
 # CLASS DEFINITION: Job Scheduler
