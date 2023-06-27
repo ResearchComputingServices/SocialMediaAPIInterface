@@ -4,12 +4,12 @@ import datetime
 import emoji
 from bs4 import BeautifulSoup
 from googleapiclient.errors import HttpError
-import SocialMediaAPIInterface.Tools.YouTubeAPI.youtube.config as config
-from SocialMediaAPIInterface.Tools.YouTubeAPI.youtube.utils import is_quota_exceeded
-from SocialMediaAPIInterface.Tools.YouTubeAPI.youtube.utils import preprocess_string
-from SocialMediaAPIInterface.Tools.YouTubeAPI.youtube.utils import remove_prefix_url
-from SocialMediaAPIInterface.Tools.YouTubeAPI.youtube.utils import log_format
-from SocialMediaAPIInterface.Tools.YouTubeAPI.youtube.utils import get_HTTP_error_msg
+import Tools.YouTubeAPI.youtube.config as config
+from Tools.YouTubeAPI.youtube.utils import is_quota_exceeded
+from Tools.YouTubeAPI.youtube.utils import preprocess_string
+from Tools.YouTubeAPI.youtube.utils import remove_prefix_url
+from Tools.YouTubeAPI.youtube.utils import log_format
+from Tools.YouTubeAPI.youtube.utils import get_HTTP_error_msg
 
 logger = logging.getLogger('youtube.comments')
 

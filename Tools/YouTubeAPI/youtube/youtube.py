@@ -8,7 +8,7 @@ from .playlist import Playlist
 from .search import Search
 from .utils import get_ids_from_file
 from .utils import log_format
-import SocialMediaAPIInterface.Tools.YouTubeAPI.youtube.config as config
+import Tools.YouTubeAPI.youtube.config as config
 import sys
 import traceback
 
@@ -158,27 +158,31 @@ class Youtube:
     # This function retrieves the videos' comments and commenters for all the videos on the playlist given as argument
     # *****************************************************************************************************
     def get_videos_comments_from_playlist(self, url):
+        response = None
         self.playlist.get_playlist_videos_ids(url)
         if len(self.playlist.videos_ids) > 0:  # Need to report the error in case we didn't get the data
-            self.comments.get_comments_and_commenters(self.playlist.videos_ids)
+            response = self.comments.get_comments_and_commenters(self.playlist.videos_ids)
+        return response
 
     # *****************************************************************************************************
     # This function retrieves the videos' metadata and creators for all the videos on the playlist given as argument
     # *****************************************************************************************************
     def get_videos_metadata_from_query(self, query, maxNumberVideos=None):
+        response = None
         self.search.get_videos_id_by_query(query, maxNumberVideos)
         if self.search.videos_ids and len(self.search.videos_ids) > 0:
-            self.videos.get_videos_and_videocreators(self.search.videos_ids)
-
+            response = self.videos.get_videos_and_videocreators(self.search.videos_ids)
+        return response
 
     # *****************************************************************************************************
     # This function retrieves the videos' metadata and creators for all the videos on the playlist given as argument
     # *****************************************************************************************************
     def get_videos_comments_from_query(self, query, maxNumberVideos=None):
+        response = None
         self.search.get_videos_id_by_query(query, maxNumberVideos)
         if self.search.videos_ids and len(self.search.videos_ids) > 0:
-            self.comments.get_comments_and_commenters(self.search.videos_ids)
-
+            response = self.comments.get_comments_and_commenters(self.search.videos_ids)
+        return response
 
 
 

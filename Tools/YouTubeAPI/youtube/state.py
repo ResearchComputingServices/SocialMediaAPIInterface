@@ -1,11 +1,11 @@
 import logging
 import traceback
 import math
-import SocialMediaAPIInterface.Tools.YouTubeAPI.youtube.config as config
+import Tools.YouTubeAPI.youtube.config as config
 import pickle
 import os
-from SocialMediaAPIInterface.Tools.YouTubeAPI.youtube.utils import get_fullpath
-from SocialMediaAPIInterface.Tools.YouTubeAPI.youtube.utils import log_format
+from Tools.YouTubeAPI.youtube.utils import get_fullpath
+from Tools.YouTubeAPI.youtube.utils import log_format
 
 logger = logging.getLogger('youtube.state')
 

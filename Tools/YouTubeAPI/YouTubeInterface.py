@@ -1,9 +1,9 @@
 import sqlite3
-from SocialMediaAPIInterface.Tools.YouTubeAPI.youtube.youtube import *
+from Tools.YouTubeAPI.youtube.youtube import *
 import traceback
-from SocialMediaAPIInterface.Tools.YouTubeAPI.youtube.utils import log_format
-from SocialMediaAPIInterface.Tools.YouTubeAPI.youtube.setup_logger import logger
-import SocialMediaAPIInterface.Tools.YouTubeAPI.youtube.config as config
+from Tools.YouTubeAPI.youtube.utils import log_format
+from Tools.YouTubeAPI.youtube.setup_logger import logger
+import Tools.YouTubeAPI.youtube.config as config
 
 
 ####################################################################################################

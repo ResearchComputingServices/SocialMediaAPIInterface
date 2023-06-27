@@ -1,5 +1,5 @@
-from SocialMediaAPIInterface.Tools.YouTubeAPI.youtube.youtube import *
-from .youtube.utils import save_file
+from Tools.YouTubeAPI.youtube.youtube import *
+from Tools.YouTubeAPI.youtube.utils import save_file
 import sys
 import json
 
@@ -46,12 +46,12 @@ output_file = "test.xlsx"
 if option == "video":
     url = "https://www.youtube.com/watch?v=ZU_wbPigVRI"
     if action == "metadata":
-        yt.get_video_metadata_for_url(url)
-        save_file(yt.videos.video_records, "output", output_file)
+        r =yt.get_video_metadata_for_url(url)
+        #save_file(yt.videos.video_records, "output", output_file)
     else:
-        yt.get_video_comments_for_url(url)
-        save_file(yt.comments.comments_records,"output", output_file)
-
+        r= yt.get_video_comments_for_url(url)
+        #save_file(yt.comments.comments_records,"output", output_file)
+    print ("# of records: {}".format(len(r)))
 
 if option == "playlist":
     url = "https://www.youtube.com/playlist?list=PLADighMnAG4DczAOY7i6-nJhB9sQDhIoR"
@@ -59,34 +59,38 @@ if option == "playlist":
 
 
     if action == "metadata":
-        yt.get_videos_metadata_from_playlist(url)
-        save_file(yt.videos.video_records, "output", output_file)
+        r= yt.get_videos_metadata_from_playlist(url)
+        #save_file(yt.videos.video_records, "output", output_file)
     else:
-        yt.get_videos_comments_from_playlist(url)
-        save_file(yt.comments.comments_records,"output", output_file)
+        r= yt.get_videos_comments_from_playlist(url)
+        #save_file(yt.comments.comments_records,"output", output_file)
 
+    print("# of records: {}".format(len(r)))
 
 if option == "file":
     file_location = "output/ottawa_search_ids.xlsx"
     if action == "metadata":
-        yt.get_videos_metadata_from_file(file_location)
-        save_file(yt.videos.video_records, "output", output_file)
+        r = yt.get_videos_metadata_from_file(file_location)
+        #save_file(yt.videos.video_records, "output", output_file)
     else:
-        yt.get_videos_comments_from_file(file_location)
-        save_file(yt.comments.comments_records,"output", output_file)
+        r = yt.get_videos_comments_from_file(file_location)
+        #save_file(yt.comments.comments_records,"output", output_file)
 
+    print("# of records: {}".format(len(r)))
 
 if option == "query":
     query = "ottawa smoke"
-    videos = 100
+    videos = 50
     if action == "metadata":
-        yt.get_videos_metadata_from_query(query,videos)
-        save_file(yt.videos.video_records, "output", output_file)
+        r = yt.get_videos_metadata_from_query(query,videos)
+        #save_file(yt.videos.video_records, "output", output_file)
     else:
-        yt.get_videos_comments_from_query(query, videos)
-        save_file(yt.comments.comments_records,"output", output_file)
+        r = yt.get_videos_comments_from_query(query, videos)
+        #save_file(yt.comments.comments_records,"output", output_file)
 
-yt.state.save_state_to_file("output", "state.pkl")
+    print("# of records: {}".format(len(r)))
+
+#yt.state.save_state_to_file("output", "state.pkl")
 
 
 print ("Your current quota usage is: ")

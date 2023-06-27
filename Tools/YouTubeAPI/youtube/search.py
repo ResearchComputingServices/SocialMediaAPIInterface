@@ -1,10 +1,10 @@
 import logging
 import traceback
-import SocialMediaAPIInterface.Tools.YouTubeAPI.youtube.config as config
-from SocialMediaAPIInterface.Tools.YouTubeAPI.youtube.utils import log_format
+import Tools.YouTubeAPI.youtube.config as config
+from Tools.YouTubeAPI.youtube.utils import log_format
 from googleapiclient.errors import HttpError
-from SocialMediaAPIInterface.Tools.YouTubeAPI.youtube.utils import is_quota_exceeded
-from SocialMediaAPIInterface.Tools.YouTubeAPI.youtube.utils import get_HTTP_error_msg
+from Tools.YouTubeAPI.youtube.utils import is_quota_exceeded
+from Tools.YouTubeAPI.youtube.utils import get_HTTP_error_msg
 
 logger = logging.getLogger('youtube.search')
 

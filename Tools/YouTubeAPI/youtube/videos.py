@@ -1,13 +1,13 @@
 import logging
 import traceback
 import datetime
-import SocialMediaAPIInterface.Tools.YouTubeAPI.youtube.config as config
-from SocialMediaAPIInterface.Tools.YouTubeAPI.youtube.utils import is_quota_exceeded
-from SocialMediaAPIInterface.Tools.YouTubeAPI.youtube.utils import is_api_key_valid
-from SocialMediaAPIInterface.Tools.YouTubeAPI.youtube.utils import get_HTTP_error_msg
-from SocialMediaAPIInterface.Tools.YouTubeAPI.youtube.utils import preprocess_string
-from SocialMediaAPIInterface.Tools.YouTubeAPI.youtube.utils import convert_to_local_zone
-from SocialMediaAPIInterface.Tools.YouTubeAPI.youtube.utils import log_format
+import Tools.YouTubeAPI.youtube.config as config
+from Tools.YouTubeAPI.youtube.utils import is_quota_exceeded
+from Tools.YouTubeAPI.youtube.utils import is_api_key_valid
+from Tools.YouTubeAPI.youtube.utils import get_HTTP_error_msg
+from Tools.YouTubeAPI.youtube.utils import preprocess_string
+from Tools.YouTubeAPI.youtube.utils import convert_to_local_zone
+from Tools.YouTubeAPI.youtube.utils import log_format
 from googleapiclient.errors import HttpError
 
 logger = logging.getLogger('youtube.videos')
