@@ -80,8 +80,8 @@ class State(object):
         state_dict["api_key_valid"] = self.api_key_valid
         state_dict["videos_ids"] = self.videos_ids
         state_dict["comments_count"] = self.comments_count
-        state_dict["query"] = self.query
-        state_dict["num_videos"] = self.num_videos
+        #state_dict["query"] = self.query
+        #state_dict["num_videos"] = self.num_videos
         state_dict["actions"] = self.actions
         state_dict["all_videos_retrieved"] = self.all_videos_retrieved
         state_dict["all_comments_retrieved"] = self.all_comments_retrieved
@@ -98,8 +98,8 @@ class State(object):
             self.api_key_valid = state_dict.get("api_key_valid",True)
             self.videos_ids = state_dict.get("videos_ids",[])
             self.comments_count = state_dict.get("comments_count",{})
-            self.query = state_dict.get("query","")
-            self.num_videos = state_dict.get("num_videos", 0)
+            #self.query = state_dict.get("query","")
+            #self.num_videos = state_dict.get("num_videos", 0)
             self.actions = state_dict.get("actions", [])
             self.all_videos_retrieved = state_dict.get("all_videos_retrieved",False)
             self.all_comments_retrieved = state_dict.get("all_comments_retrieved",False)
