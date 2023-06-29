@@ -37,7 +37,7 @@ if not yt.service:
 
 
 
-option="query"   #["playlist" "query" "file"]
+option="network"   #["playlist" "query" "file" "network"]
 action ="comments" #["metadata" "comments"]
 output_file = "test.xlsx"
 

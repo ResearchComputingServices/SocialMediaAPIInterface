@@ -156,9 +156,8 @@ def PerformYouTubeAPICall(sqliteCursor, jobDict):
     #jobDict = GetYouTubeTableRow(sqliteCursor, jobDict['youtubeJobID'])
     #credentialsDict = GetCredentialsTableRow(sqliteCursor, jobDict['credentialsID'])
 
-    jobDict = ""
     api_token = ""
-    quota = 0
+    quota = 5495
 
     if jobDict["status"] == "NewJob":
         listOfResponsesJSON = handle_new_job(jobDict, api_token, quota)
@@ -174,8 +173,8 @@ def PerformYouTubeAPICall(sqliteCursor, jobDict):
 ####################################################################################################
 def YouTubeInterface(dataBaseFilename, jobDict):
 
-    logger.info('Performing YouTube job:', flush=True)
-    logger.info(jobDict, flush=True)
+    logger.info('Performing YouTube job:')
+    logger.info(jobDict)
 
     # Set up connection to database
     #dataBaseConnection = sqlite3.connect(dataBaseFilename)
@@ -199,3 +198,12 @@ def YouTubeInterface(dataBaseFilename, jobDict):
     #SetJobStatus(dataBaseConnection, sqliteCursor, jobDict['id'], '\'DONE\'')
 
     return
+
+
+#jobDict = {"status": "NewJob", "option": "video", "actions": ["metadata", "comments"], "input" : "https://www.youtube.com/watch?v=-DkpWjlJQIY", "videos": 0}
+#jobDict = {"status": "NewJob", "option": "playlist", "actions": ["metadata", "comments"], "input" : "https://www.youtube.com/playlist?list=PLADighMnAG4DczAOY7i6-nJhB9sQDhIoR", "videos": 0}
+jobDict = {"status": "NewJob", "option": "query", "actions": ["metadata", "comments"], "input" : "pao de queijo minero", "videos": 50}
+#jobDict = {"status": "NewJob", "option": "query", "actions": ["comments"], "input" : "pao de queijo liquidificador", "videos": 50}
+
+
+YouTubeInterface("", jobDict)
