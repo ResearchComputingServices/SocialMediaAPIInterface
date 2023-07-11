@@ -4,6 +4,7 @@ import sqlite3
 from .Utils import  *
 from .ToolInterfaces.RedditAPIInterface import RedditInterface
 from .ToolInterfaces.CrawlerInterface import CrawlerInterface
+from .ToolInterfaces.YouTubeInterface import YouTubeInterface
 
 ##############################################################################################################
 # CLASS DEFINITION: Job Scheduler
@@ -24,7 +25,7 @@ class JobScheduler:
     jobHandleDict ={REDDIT_JOB  : RedditInterface,
                     CRAWL_JOB   : CrawlerInterface,
                     TWITTER_JOB : DummyInterface,
-                    YOUTUBE_JOB : DummyInterface} 
+                    YOUTUBE_JOB : YouTubeInterface}
         
     #########################################################################
     # CONSTRUCTOR
