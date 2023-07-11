@@ -1,12 +1,12 @@
 import sqlite3
 import logging
-from Utils import *
+from SocialMediaAPIInterface.Scheduler.Utils import *
 
 import sys
 sys.path.insert(0, BASE_DIR)
 
 from DataBaseUtils import GetRedditTableRow, GetCredentialsTableRow, SetJobStatus, SetOutputFilePath
-from Tools.RedditAPITool.RedditAPISession import RedditAPISession
+from SocialMediaAPIInterface.Tools.RedditAPITool.RedditAPISession import RedditAPISession
 
 ####################################################################################################
 #
