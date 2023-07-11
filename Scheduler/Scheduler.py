@@ -1,9 +1,9 @@
 import concurrent.futures
 import time
 import sqlite3
-from Utils import *
-from ToolInterfaces.RedditAPIInterface import RedditInterface
-from ToolInterfaces.CrawlerInterface import CrawlerInterface
+from .Utils import *
+from .ToolInterfaces.RedditAPIInterface import RedditInterface
+from .ToolInterfaces.CrawlerInterface import CrawlerInterface
 
 ##############################################################################################################
 # CLASS DEFINITION: Job Scheduler
@@ -20,7 +20,7 @@ class JobScheduler:
     keepRunning_ = True
     waitTime_ = 60 # the number of seconds to wait before checking for new jobs
      
-    # This dictionary connects question type flags to the visualizer that creates the graphic for them
+    # This dictionary connects job type flags to the tool which handles them
     jobHandleDict ={REDDIT_JOB  : RedditInterface,
                     CRAWL_JOB   : CrawlerInterface,
                     TWITTER_JOB : DummyInterface,
@@ -63,12 +63,13 @@ class JobScheduler:
                 if jobType in self.jobHandleDict.keys():
                      # start a process that will execute the correct script
                     executor.submit(self.jobHandleDict[jobType],
-                                    self.dataBaseFilePath_,
+                                    self.dataBaseFilePath_, # todo: REMOVE THIS WHEN WE USE THE NODEjs bACK END
                                     jobDict) 
                 else:
                     print('[ERROR]: Unknown Job Type: ', jobType)
             
             # this allows the context manager to return before each process is finished
+            # which means the scheduler is free to go back and check for other new jobs
             executor.shutdown(wait=False)
 
         return
@@ -129,3 +130,20 @@ if __name__ == '__main__':
     js = JobScheduler('testDataBase.db', 5)
     
     js.Run()
+    
+ 
+# Need to have API calls which can replace the functionality in checkDataBaseForNewJobs   
+# 
+# an API call which gets all the jobs? Or can we request all the jobs with certain IDs. Status', etc...
+#
+# def checkDataBaseForNewJobs(self):   
+#   sqliteCursor = self.dataBaseConnection_.cursor()    
+#   sql_table_query = '''SELECT * FROM JobsTable WHERE jobStatus = \'READY\' '''
+#   sqliteCursor.execute(sql_table_query)
+#
+#   things = sqliteCursor.fetchall()
+#
+#   sqliteCursor.close()
+#
+#   listOfJobsDicts = [{k: item[k] for k in item.keys()} for item in things]
+#   return listOfJobsDicts
