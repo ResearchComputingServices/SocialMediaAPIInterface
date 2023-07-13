@@ -19,7 +19,8 @@ def PerformRedditAPICall(sqliteCursor,jobDict):
     credentialsDict = GetCredentialsTableRow(sqliteCursor,jobDict['credentialsID'])
     
     session = RedditAPISession(credentialsDict) 
-    listOfResponsesJSON = session.HandleJobDict(optionsDict) 
+    #listOfResponsesJSON = session.HandleJobDict(optionsDict) 
+    STATUS, numQuota, msg = session.HandleJobDict(optionsDict) 
     session.End()
             
     return listOfResponsesJSON
@@ -27,8 +28,8 @@ def PerformRedditAPICall(sqliteCursor,jobDict):
 ####################################################################################################
 #
 ####################################################################################################
-def RedditInterface(dataBaseFilename,
-                    jobDict):
+def RedditToolInterface(dataBaseFilename,
+                        jobDict):
    
     logging.info('PERFORMING JOBS:',flush=True)
     logging.info(jobDict,flush=True)

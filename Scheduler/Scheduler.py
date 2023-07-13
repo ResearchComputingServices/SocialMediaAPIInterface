@@ -2,7 +2,7 @@ import concurrent.futures
 import time
 import sqlite3
 from .Utils import  *
-from .ToolInterfaces.RedditAPIInterface import RedditInterface
+from .ToolInterfaces.RedditAPIInterface import RedditToolInterface
 from .ToolInterfaces.CrawlerInterface import CrawlerInterface
 from .ToolInterfaces.YouTubeInterface import YouTubeInterface
 
@@ -22,7 +22,7 @@ class JobScheduler:
     waitTime_ = 60 # the number of seconds to wait before checking for new jobs
      
     # This dictionary connects job type flags to the tool which handles them
-    jobHandleDict ={REDDIT_JOB  : RedditInterface,
+    jobHandleDict ={REDDIT_JOB  : RedditToolInterface,
                     CRAWL_JOB   : CrawlerInterface,
                     TWITTER_JOB : DummyInterface,
                     YOUTUBE_JOB : YouTubeInterface}
@@ -62,7 +62,7 @@ class JobScheduler:
                 jobType = jobDict['jobType']
             
                 if jobType in self.jobHandleDict.keys():
-                     # start a process that will execute the correct script
+                    # start a process that will execute the correct script
                     executor.submit(self.jobHandleDict[jobType],
                                     self.dataBaseFilePath_, # todo: REMOVE THIS WHEN WE USE THE NODEjs bACK END
                                     jobDict) 
